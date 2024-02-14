@@ -1,7 +1,7 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:remove_diacritic/remove_diacritic.dart';
 
 void main() {
@@ -53,7 +53,11 @@ class _MyHomePageState extends State<MyHomePage> {
       if (result != null) {
         _fileName = result!.files.first.name;
         pickedfile = result!.files.first;
+
+        await saveFilePermanently(pickedfile);
+
         fileToDisplay = File(pickedfile!.path.toString());
+        openFile(pickedfile!.path.toString());
       } else {
         setState(() {
           isLoading = false;
@@ -65,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
         isLoading = false;
       });
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -94,5 +99,15 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void openFile(String path) {
+    OpenFilex.open(path);
+  }
+
+  saveFilePermanently(PlatformFile? pickedfile) async {
+    final newFile = File('/home/sire/${pickedfile!.name}');
+    // ignore: avoid_print
+    print(newFile.path.toString());
   }
 }
