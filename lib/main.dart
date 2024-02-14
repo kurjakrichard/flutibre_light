@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:remove_diacritic/remove_diacritic.dart';
 
 void main() {
   runApp(const Flutibre());
@@ -82,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: isLoading
                 ? const CircularProgressIndicator()
                 : pickedfile != null
-                    ? Text(_fileName.toString())
+                    ? Text(removeDiacritics(_fileName.toString()))
                     : const Text(''),
           ),
         ],
