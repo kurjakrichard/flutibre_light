@@ -1,11 +1,13 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutibre_light/providers/booklist_provider.dart';
+import 'package:flutibre_light/screens/show_items_screen.dart';
+import 'package:flutibre_light/widgets/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:remove_diacritic/remove_diacritic.dart';
+import 'package:provider/provider.dart';
+
+import 'screens/manage_item_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const Flutibre());
 }
 
@@ -14,104 +16,25 @@ class Flutibre extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutibre'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  PlatformFile? _pickedfile;
-  bool _isLoading = false;
-  var allowedExtensions = ['pdf', 'odt', 'epub', 'mobi'];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Center(
-            child: _isLoading
-                ? const CircularProgressIndicator()
-                : _pickedfile != null
-                    ? Text(removeDiacritics(_pickedfile!.name.toString()))
-                    : const Text('Nincs fájl.'),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: pickFile,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (context) => BooksProvider())],
+      builder: (context, child) => MaterialApp(
+        theme: baseTheme,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const ShowItemsScreen(),
+          '/addpage': (context) => const ManageItemScreen(
+                title: 'Add Item',
+                buttonText: 'Insert',
+              ),
+          '/editpage': (context) => const ManageItemScreen(
+                title: 'Edit Item',
+                buttonText: 'Update',
+              )
+        },
+        debugShowCheckedModeBanner: false,
+        title: 'Flutibre',
       ),
     );
-  }
-
-  void pickFile() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowMultiple: false,
-          allowedExtensions: allowedExtensions);
-
-      if (result != null) {
-        _pickedfile = result.files.first;
-        print('Name: ${_pickedfile!.name}');
-        print('Bytes: ${_pickedfile!.bytes}');
-        print('Size: ${_pickedfile!.size}');
-        print('Extension: ${_pickedfile!.extension}');
-        print('Path: ${_pickedfile!.path}');
-
-        await saveFilePermanently(_pickedfile);
-
-        openFile(_pickedfile!.path!);
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      // ignore: avoid_print
-      print(e);
-    }
-  }
-
-  void openFile(String path) {
-    OpenFilex.open(path);
-  }
-
-  Future<File> saveFilePermanently(PlatformFile? pickedfile) async {
-    final appStorage = await getApplicationDocumentsDirectory();
-    final newFile =
-        File('${appStorage.path}/${removeDiacritics(pickedfile!.name)}');
-    return File(pickedfile.path!).copy(newFile.path);
   }
 }
