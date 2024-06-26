@@ -3,7 +3,6 @@ import 'package:flutibre_light/screens/show_items_screen.dart';
 import 'package:flutibre_light/widgets/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'screens/manage_item_screen.dart';
 
 void main() {

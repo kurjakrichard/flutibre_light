@@ -1,5 +1,6 @@
 // ignore: depend_on_referenced_packages
-import 'package:path/path.dart';
+import 'dart:async';
+import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../model/book.dart';
@@ -29,8 +30,9 @@ class DatabaseHandler {
     final database = await databaseFactory.openDatabase(
       dbPath,
       options: OpenDatabaseOptions(
-        version: 1,
+        version: 2,
         onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
       ),
     );
     return database;
@@ -113,12 +115,23 @@ class DatabaseHandler {
 // This creates tables in our database.
   Future<void> _onCreate(Database database, int version) async {
     final db = database;
-    await db.execute(""" 
+    await db.execute("""
 CREATE TABLE books (
   id INTEGER PRIMARY KEY AUTOINCREMENT,                          
   title     TEXT NOT NULL DEFAULT 'Unknown' COLLATE NOCASE,
   author_sort TEXT COLLATE NOCASE,
   path TEXT NOT NULL DEFAULT "");
+
+ """);
+  }
+
+  FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) {
+    db.execute("""
+CREATE TABLE authors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,                          
+  name     TEXT NOT NULL DEFAULT 'Unknown' COLLATE NOCASE,
+  sort TEXT COLLATE NOCASE
+  "");
 
  """);
   }
