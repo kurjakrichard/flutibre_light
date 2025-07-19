@@ -1,15 +1,20 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutibre_light/providers/book_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/book.dart';
 import '../repository/database_handler.dart';
 
-class BooksProvider extends ChangeNotifier {
-  List<Book> items = [];
+final bookNotifier = StateNotifierProvider((_) => BookNotifier());
 
-  Future<void> selectAll() async {
+class BookNotifier extends StateNotifier<BookState> {
+  BookNotifier() : super(const BookState.initial()) {
+    selectAll();
+  }
+  List<Book> books = [];
+
+  void selectAll() async {
     var databaseHandler = DatabaseHandler();
-    items = await databaseHandler.getBookItemList();
-
-    notifyListeners();
+    books = await databaseHandler.getBookItemList();
+    state = state.copyWith(books: books);
   }
 
   Future insert({required Book book}) async {
@@ -20,14 +25,12 @@ class BooksProvider extends ChangeNotifier {
       item: book,
     );
     selectAll();
-    notifyListeners();
   }
 
-  void delete(int id) async {
+  Future<void> delete(int id) async {
     var databaseHandler = DatabaseHandler();
     await databaseHandler.delete('books', id);
     selectAll();
-    notifyListeners();
   }
 
   Future update({
@@ -41,6 +44,5 @@ class BooksProvider extends ChangeNotifier {
       item: book,
     );
     selectAll();
-    notifyListeners();
   }
 }

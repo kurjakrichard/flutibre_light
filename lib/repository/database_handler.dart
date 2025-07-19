@@ -1,4 +1,4 @@
-// ignore: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages
 import 'dart:async';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +8,7 @@ import '../model/book.dart';
 class DatabaseHandler {
   static DatabaseHandler? _databaseHandler;
   static Database? _database;
-  final db = 'metadata';
+  final db = 'metadata.db';
 
   DatabaseHandler._createInstance();
 
@@ -26,8 +26,8 @@ class DatabaseHandler {
     sqfliteFfiInit();
     final databaseFactory = databaseFactoryFfi;
     final appDocumentsDir = await getApplicationDocumentsDirectory();
-    final dbPath = join(appDocumentsDir.path, "ebooks/$db.db");
-    final database = await databaseFactory.openDatabase(
+    final dbPath = join(appDocumentsDir.path, "ebooks/$db");
+    return await databaseFactory.openDatabase(
       dbPath,
       options: OpenDatabaseOptions(
         version: 2,
@@ -35,7 +35,6 @@ class DatabaseHandler {
         onUpgrade: _onUpgrade,
       ),
     );
-    return database;
   }
 
 // Get Booklist from database

@@ -1,22 +1,19 @@
+import 'package:flutibre_light/providers/book_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:remove_diacritic/remove_diacritic.dart';
-
 import '../model/book.dart';
-import '../providers/booklist_provider.dart';
 
-class ManageItemScreen extends StatefulWidget {
-  const ManageItemScreen(
-      {Key? key, required this.title, required this.buttonText})
-      : super(key: key);
+class EditScreen extends StatefulWidget {
+  const EditScreen({super.key, required this.title, required this.buttonText});
   final String title;
   final String buttonText;
 
   @override
-  State<ManageItemScreen> createState() => _ManageItemScreenState();
+  State<EditScreen> createState() => _EditScreenState();
 }
 
-class _ManageItemScreenState extends State<ManageItemScreen> {
+class _EditScreenState extends State<EditScreen> {
   Book? selectedItem;
   final TextEditingController _titleController = TextEditingController();
   // ignore: non_constant_identifier_names
@@ -45,15 +42,19 @@ class _ManageItemScreenState extends State<ManageItemScreen> {
         title: Text(widget.title),
         actions: [
           route == '/editpage'
-              ? IconButton(
-                  tooltip: 'Delete book',
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    Provider.of<BooksProvider>(context, listen: false)
-                        .delete(selectedItem!.id!);
-                    Navigator.pop(context);
-                  },
-                )
+              ? Consumer(builder:
+                  (BuildContext context, WidgetRef ref, Widget? child) {
+                  final booksState = ref.read(booksProvider.notifier);
+                  return IconButton(
+                    tooltip: 'Delete book',
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      await booksState.delete(selectedItem!.id!);
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
+                    },
+                  );
+                })
               : Container(),
         ],
       ),
@@ -62,24 +63,29 @@ class _ManageItemScreenState extends State<ManageItemScreen> {
           textController('Title', _titleController),
           textController('AuthroSort', _author_sortController),
           textController('Path', _pathController),
-          ElevatedButton(
-              onPressed: () {
-                Book book = Book(
-                    id: selectedItem?.id,
-                    title: _titleController.text,
-                    author_sort: _author_sortController.text,
-                    path: removeDiacritics(_pathController.text).toString());
+          Consumer(
+            builder: (BuildContext context, WidgetRef ref, Widget? child) {
+              final booksState = ref.read(booksProvider.notifier);
+              return ElevatedButton(
+                onPressed: () async {
+                  Book book = Book(
+                      id: selectedItem?.id,
+                      title: _titleController.text,
+                      author_sort: _author_sortController.text,
+                      path: removeDiacritics(_pathController.text).toString());
 
-                route != '/editpage'
-                    ? Provider.of<BooksProvider>(context, listen: false)
-                        .insert(book: book)
-                    : Provider.of<BooksProvider>(context, listen: false)
-                        .update(book: book, id: book.id!);
-                //context.read<TodoProvider>().insertTodo(todo);
+                  route != '/editpage'
+                      ? await booksState.insert(book: book)
+                      : await booksState.update(book: book, id: book.id!);
+                  //context.read<TodoProvider>().insertTodo(todo);
 
-                Navigator.pop(context);
-              },
-              child: Text(widget.buttonText))
+                  // ignore: use_build_context_synchronously
+                  Navigator.pop(context);
+                },
+                child: Text(widget.buttonText),
+              );
+            },
+          ),
         ],
       ),
     );
